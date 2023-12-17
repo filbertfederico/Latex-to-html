@@ -9,6 +9,7 @@ class MarkdownParser:
     def parse_tokens_to_html(self):
         in_blockquote = False
         in_list = False
+        in_strikethrough = False  # Track strikethrough text
         for line in self.tokens:
             if line.startswith("#"):
                 # Determine header level based on the number of # symbols
@@ -22,19 +23,40 @@ class MarkdownParser:
                     in_blockquote = True
                 blockquote_line = line.replace(">", "").strip()
                 self.html_output.append(f"<p>{blockquote_line}</p>")
-            elif "**" in line:
-                # Handling inline bold (**bold**)
+            elif "~~" in line:
+                # Handling strikethrough (~~strikethrough~~)
                 parsed_line = ""
                 index = 0
                 while index < len(line):
-                    if line[index:index + 2] == "**":
-                        if line[index + 2:index + 3] != "*":
-                            parsed_line += "<strong>"
+                    if line[index:index + 2] == "~~":
+                        if not in_strikethrough:
+                            parsed_line += "<del>"
+                            in_strikethrough = True
                             index += 2
-                            while index < len(line) and line[index:index + 2] != "**":
-                                parsed_line += line[index]
-                                index += 1
-                            parsed_line += "</strong>"
+                        else:
+                            parsed_line += "</del>"
+                            in_strikethrough = False
+                            index += 2
+                    else:
+                        parsed_line += line[index]
+                        index += 1
+                self.html_output.append(f"<p>{parsed_line}</p>")
+            elif "[" in line and "]" in line and "(" in line and ")" in line:
+                # Handling links ([link text](url))
+                parsed_line = ""
+                index = 0
+                while index < len(line):
+                    if line[index] == "[":
+                        parsed_line += "<a href='"
+                        link_start = line.find("[", index)
+                        link_end = line.find("]", index)
+                        url_start = line.find("(", index)
+                        url_end = line.find(")", index)
+                        if link_start != -1 and link_end != -1 and url_start != -1 and url_end != -1:
+                            link_text = line[link_start + 1:link_end]
+                            url = line[url_start + 1:url_end]
+                            parsed_line += f"{url}'>{link_text}</a>"
+                            index = url_end + 1
                         else:
                             parsed_line += line[index]
                             index += 1
