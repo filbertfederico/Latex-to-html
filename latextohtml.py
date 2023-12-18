@@ -4,7 +4,7 @@ def latex_to_html(latex_text):
     # Define regular expressions for basic LaTeX commands
     latex_commands = {
         r'\\documentclass\{(.+?)\}': r'<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">',
-        r'\\title\{(.+?)\}': r'<title>\1</title></head><body><h1>\1</h1>',
+        r'\\title\{(.+?)\}': r'<title>\1</title></head><body>',
         r'\\section\{(.+?)\}': r'<h2>\1</h2>',
         r'\\subsection\{(.+?)\}': r'<h3>\1</h3>',
         r'\\textbf\{(.+?)\}': r'<b>\1</b>',
