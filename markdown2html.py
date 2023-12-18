@@ -41,29 +41,23 @@ class MarkdownParser:
                         parsed_line += line[index]
                         index += 1
                 self.html_output.append(f"<p>{parsed_line}</p>")
+            elif "**" in line:
+                # Handling incomplete bold syntax (**bold**)
+                if line.count("**") % 2 != 0:
+                    raise ValueError("Incomplete bold syntax: '**' not properly closed")
+            elif "_" in line:
+                # Handling incomplete italic syntax (_italic_)
+                if line.count("_") % 2 != 0:
+                    raise ValueError("Incomplete italic syntax: '_' not properly closed")
+            elif "~" in line:
+                # Handling incomplete strikethrough syntax (~~strikethrough~~)
+                if line.count("~") % 2 != 0:
+                    raise ValueError("Incomplete strikethrough syntax: '~' not properly closed")
             elif "[" in line and "]" in line and "(" in line and ")" in line:
-                # Handling links ([link text](url))
-                parsed_line = ""
-                index = 0
-                while index < len(line):
-                    if line[index] == "[":
-                        parsed_line += "<a href='"
-                        link_start = line.find("[", index)
-                        link_end = line.find("]", index)
-                        url_start = line.find("(", index)
-                        url_end = line.find(")", index)
-                        if link_start != -1 and link_end != -1 and url_start != -1 and url_end != -1:
-                            link_text = line[link_start + 1:link_end]
-                            url = line[url_start + 1:url_end]
-                            parsed_line += f"{url}'>{link_text}</a>"
-                            index = url_end + 1
-                        else:
-                            parsed_line += line[index]
-                            index += 1
-                    else:
-                        parsed_line += line[index]
-                        index += 1
-                self.html_output.append(f"<p>{parsed_line}</p>")
+                # Handling incomplete link syntax ([text](url))
+                if (line.count("[") != line.count("]") or line.count("(") != line.count(")")) or \
+                        (line.find("[") > line.find("]") or line.find("(") > line.find(")")):
+                    raise ValueError("Incomplete link syntax: '[', ']', '(', or ')' issue")
             elif line.startswith("- "):
                 # List parsing
                 if not in_list:
@@ -90,7 +84,7 @@ def read_markdown_file(file_name):
 
 
 # File name containing Markdown content
-file_name = 'input.md'
+file_name = 'Latex-to-html/input.md'
 
 # Read Markdown content from the file
 markdown_text = read_markdown_file(file_name)
@@ -98,5 +92,9 @@ markdown_text = read_markdown_file(file_name)
 # Create a parser instance and process the Markdown content
 parser = MarkdownParser()
 parser.tokenize(markdown_text)
-html_output = parser.parse_tokens_to_html()
-print(html_output)
+
+try:
+    html_output = parser.parse_tokens_to_html()
+    print(html_output)
+except ValueError as e:
+    print(f"Error: {e}")
